@@ -75,6 +75,7 @@ public abstract class AbstractRowsEventDataDeserializer<T extends EventData> imp
     private Long invalidDateAndTimeRepresentation;
     private boolean microsecondsPrecision;
     private boolean deserializeCharAndBinaryAsByteArray;
+    private TimeZone timeZone;
 
     public AbstractRowsEventDataDeserializer(Map<Long, TableMapEventData> tableMapEventByTableId) {
         this.tableMapEventByTableId = tableMapEventByTableId;
@@ -422,7 +423,7 @@ public abstract class AbstractRowsEventDataDeserializer<T extends EventData> imp
         if (year == 0 || month == 0 || day == 0) {
             return invalidDateAndTimeRepresentation;
         }
-        return UnixTime.from(year, month, day, hour, minute, second, millis);
+        return UnixTime.from(year, month, day, hour, minute, second, millis,this.timeZone);
     }
 
     protected int deserializeFractionalSeconds(int meta, ByteArrayInputStream inputStream) throws IOException {
@@ -510,6 +511,10 @@ public abstract class AbstractRowsEventDataDeserializer<T extends EventData> imp
         return result;
     }
 
+    public void setTimeZone(TimeZone timeZone) {
+        this.timeZone = timeZone;
+    }
+
     /**
      * Class for working with Unix time.
      */
@@ -538,10 +543,10 @@ public abstract class AbstractRowsEventDataDeserializer<T extends EventData> imp
          * 1 January 1970, not counting leap seconds)
          */
         // checkstyle, please ignore ParameterNumber for the next line
-        public static long from(int year, int month, int day, int hour, int minute, int second, int millis) {
-            if (year < 1582 || (year == 1582 && (month < 10 || (month == 10 && day < 15)))) {
-                return fallbackToLocal(year, month, day, hour, minute, second, millis);
-            }
+        public static long from(int year, int month, int day, int hour, int minute, int second, int millis,TimeZone timeZone) {
+            /*if (year < 1582 || (year == 1582 && (month < 10 || (month == 10 && day < 15)))) {
+                return fallbackToLocal(year, month, day, hour, minute, second, millis,timeZone);
+            }*/
             /*long timestamp = 0;
             int numberOfLeapYears = leapYears(1970, year);
             timestamp += 366L * 24 * 60 * 60 * numberOfLeapYears;
@@ -550,9 +555,25 @@ public abstract class AbstractRowsEventDataDeserializer<T extends EventData> imp
             timestamp += ((daysUpToMonth + day - 1) * 24 * 60 * 60) +
                 (hour * 60 * 60) + (minute * 60) + (second);
             timestamp = timestamp * 1000 + millis;*/
-            return fallbackToLocal(year, month, day, hour, minute, second, millis);
+            return fallbackToLocal(year, month, day, hour, minute, second, millis,timeZone);
         }
 
+        public static long from(int year, int month, int day, int hour, int minute, int second, int millis) {
+            /*if (year < 1582 || (year == 1582 && (month < 10 || (month == 10 && day < 15)))) {
+                return fallbackToLocal(year, month, day, hour, minute, second, millis,timeZone);
+            }*/
+            /*long timestamp = 0;
+            int numberOfLeapYears = leapYears(1970, year);
+            timestamp += 366L * 24 * 60 * 60 * numberOfLeapYears;
+            timestamp += 365L * 24 * 60 * 60 * (year - 1970 - numberOfLeapYears);
+            long daysUpToMonth = isLeapYear(year) ? LEAP_YEAR_DAYS_BY_MONTH[month - 1] : YEAR_DAYS_BY_MONTH[month - 1];
+            timestamp += ((daysUpToMonth + day - 1) * 24 * 60 * 60) +
+                (hour * 60 * 60) + (minute * 60) + (second);
+            timestamp = timestamp * 1000 + millis;*/
+            return fallbackToLocal(year, month, day, hour, minute, second, millis,TimeZone.getDefault());
+        }
+
+        @Deprecated
         // checkstyle, please ignore ParameterNumber for the next line
         private static long fallbackToGC(int year, int month, int dayOfMonth, int hourOfDay,
                                          int minute, int second, int millis) {
@@ -569,8 +590,8 @@ public abstract class AbstractRowsEventDataDeserializer<T extends EventData> imp
 
         // checkstyle, please ignore ParameterNumber for the next line
         private static long fallbackToLocal(int year, int month, int dayOfMonth, int hourOfDay,
-                                         int minute, int second, int millis) {
-            Calendar c = Calendar.getInstance();
+                                         int minute, int second, int millis, TimeZone timeZone) {
+            Calendar c = Calendar.getInstance(timeZone);
             c.set(Calendar.YEAR, year);
             c.set(Calendar.MONTH, month - 1);
             c.set(Calendar.DAY_OF_MONTH, dayOfMonth);

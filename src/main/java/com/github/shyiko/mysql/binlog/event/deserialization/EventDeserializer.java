@@ -28,6 +28,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * @author <a href="mailto:stanley.shyiko@gmail.com">Stanley Shyiko</a>
@@ -45,6 +46,7 @@ public class EventDeserializer {
 
     private EventDataDeserializer tableMapEventDataDeserializer;
     private EventDataDeserializer formatDescEventDataDeserializer;
+    private TimeZone timeZone;
 
     public EventDeserializer() {
         this(new EventHeaderV4Deserializer(), new NullEventDataDeserializer());
@@ -176,6 +178,7 @@ public class EventDeserializer {
                 compatibilitySet.contains(CompatibilityMode.DATE_AND_TIME_AS_LONG) ||
                 compatibilitySet.contains(CompatibilityMode.DATE_AND_TIME_AS_LONG_MICRO);
             deserializer.setDeserializeDateAndTimeAsLong(deserializeDateAndTimeAsLong);
+            deserializer.setTimeZone(timeZone);
             deserializer.setMicrosecondsPrecision(
                 compatibilitySet.contains(CompatibilityMode.DATE_AND_TIME_AS_LONG_MICRO)
             );
@@ -305,6 +308,10 @@ public class EventDeserializer {
     public EventDataDeserializer getEventDataDeserializer(EventType eventType) {
         EventDataDeserializer eventDataDeserializer = eventDataDeserializers.get(eventType);
         return eventDataDeserializer != null ? eventDataDeserializer : defaultEventDataDeserializer;
+    }
+
+    public void setTimeZone(TimeZone timeZone) {
+        this.timeZone = timeZone;
     }
 
     /**

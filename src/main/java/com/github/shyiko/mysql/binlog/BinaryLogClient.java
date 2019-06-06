@@ -69,6 +69,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -139,6 +140,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
     private boolean useBinlogFilenamePositionInGtidMode;
     private String gtid;
     private boolean tx;
+    private TimeZone timeZone;
 
     private EventDeserializer eventDeserializer = new EventDeserializer();
 
@@ -686,6 +688,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
             eventDeserializer.setEventDataDeserializer(eventType,
                 new EventDataWrapper.Deserializer(internalEventDataDeserializer,
                     eventDataDeserializer));
+            eventDeserializer.setTimeZone(timeZone);
         }
     }
 
@@ -1275,6 +1278,10 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
 
         public void onDisconnect(BinaryLogClient client) { }
 
+    }
+
+    public void setTimeZone(TimeZone tz){
+        timeZone = tz;
     }
 
 }
